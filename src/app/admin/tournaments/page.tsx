@@ -25,6 +25,8 @@ export default function AdminTournamentsPage() {
   const [roomModalTourney, setRoomModalTourney] = useState<any | null>(null);
   const [roomId, setRoomId] = useState('');
   const [roomPassword, setRoomPassword] = useState('');
+  const [matchLiveUrl, setMatchLiveUrl] = useState('');
+  const [matchStatus, setMatchStatus] = useState('REGISTRATION_OPEN');
   const [isPublished, setIsPublished] = useState(false);
   const [savingRoom, setSavingRoom] = useState(false);
 
@@ -49,6 +51,8 @@ export default function AdminTournamentsPage() {
     setRoomModalTourney(t);
     setRoomId(t.roomId || '');
     setRoomPassword(t.roomPassword || '');
+    setMatchLiveUrl(t.liveStreamUrl || '');
+    setMatchStatus(t.status || 'REGISTRATION_OPEN');
     setIsPublished(Boolean(t.isRoomCredentialsPublished));
   };
 
@@ -64,12 +68,14 @@ export default function AdminTournamentsPage() {
         body: JSON.stringify({
           roomId,
           roomPassword,
+          liveStreamUrl: matchLiveUrl || null,
+          status: matchStatus,
           isRoomCredentialsPublished: isPublished,
         }),
       });
 
       if (res.ok) {
-        alert(isPublished ? 'Room ID & Password published to registered players!' : 'Room credentials saved as draft.');
+        alert(isPublished ? 'Room ID, Password & Live Stream published to registered players!' : 'Room credentials saved as draft.');
         setRoomModalTourney(null);
         fetchTournaments();
       } else {
@@ -278,6 +284,35 @@ export default function AdminTournamentsPage() {
                   placeholder="e.g. FF2026"
                   className="w-full px-3 py-2 rounded-xl bg-charcoal-950 border border-charcoal-700 text-white font-mono text-sm focus:border-ff-orange focus:outline-none"
                 />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-red-400 block mb-1">
+                  Match-specific Live Stream URL (ঐচ্ছিক)
+                </label>
+                <input
+                  type="url"
+                  value={matchLiveUrl}
+                  onChange={(e) => setMatchLiveUrl(e.target.value)}
+                  placeholder="https://youtube.com/live/... (খালি রাখলে সেটিংসের লিঙ্ক হবে)"
+                  className="w-full px-3 py-2 rounded-xl bg-charcoal-950 border border-charcoal-700 text-white font-mono text-xs focus:border-red-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-300 block mb-1">
+                  Tournament Status (টুর্নামেন্ট স্ট্যাটাস)
+                </label>
+                <select
+                  value={matchStatus}
+                  onChange={(e) => setMatchStatus(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-charcoal-950 border border-charcoal-700 text-white text-xs font-bold focus:border-ff-orange focus:outline-none"
+                >
+                  <option value="REGISTRATION_OPEN">REGISTRATION_OPEN (রেজিস্ট্রেশন চলছে)</option>
+                  <option value="LIVE">🔴 LIVE (লাইভ সম্প্রচার চলছে - Live Now)</option>
+                  <option value="FULL">FULL (রুম ফুল)</option>
+                  <option value="COMPLETED">COMPLETED (ম্যাচ সম্পন্ন)</option>
+                </select>
               </div>
 
               <div className="p-3 rounded-xl bg-charcoal-950 border border-charcoal-800 flex items-center gap-3">

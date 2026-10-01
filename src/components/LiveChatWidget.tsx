@@ -289,22 +289,22 @@ export default function LiveChatWidget() {
     <>
       {/* Floating Static Trigger Button (Bottom Right) */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+        <div className="fixed bottom-4 right-3 sm:bottom-6 sm:right-6 z-50 flex items-center gap-3">
           <button
             onClick={handleOpen}
-            className="group relative flex items-center gap-3 px-5 py-3.5 rounded-full bg-gradient-to-r from-ff-orange via-amber-500 to-ff-red text-slate-950 font-black shadow-glow-orange hover:scale-105 active:scale-95 transition-all"
+            className="group relative flex items-center gap-2 sm:gap-3 px-4 py-2.5 sm:px-5 sm:py-3.5 rounded-full bg-gradient-to-r from-ff-orange via-amber-500 to-ff-red text-slate-950 font-black shadow-glow-orange hover:scale-105 active:scale-95 transition-all text-xs sm:text-sm"
             aria-label="Open Live Chat"
           >
             <div className="relative">
-              <MessageSquare className="w-5 h-5 text-slate-950 fill-current" />
+              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-slate-950 fill-current" />
               <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white animate-pulse"></span>
             </div>
-            <span className="text-sm uppercase tracking-wider font-display font-black">
+            <span className="text-xs sm:text-sm uppercase tracking-wider font-display font-black">
               LIVE CHAT
             </span>
 
             {unreadCount > 0 && (
-              <span className="w-5 h-5 rounded-full bg-black text-white text-xs font-black flex items-center justify-center -ml-1">
+              <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-black text-white text-[10px] sm:text-xs font-black flex items-center justify-center -ml-0.5 sm:-ml-1">
                 {unreadCount}
               </span>
             )}
@@ -314,7 +314,7 @@ export default function LiveChatWidget() {
 
       {/* Floating Live Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-full max-w-[400px] h-[560px] bg-white dark:bg-charcoal-900 border border-slate-200 dark:border-charcoal-700 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
+        <div className="fixed inset-x-2 bottom-2 sm:inset-x-auto sm:bottom-6 sm:right-6 z-50 sm:w-[400px] max-w-[400px] h-[85vh] sm:h-[560px] max-h-[620px] bg-white dark:bg-charcoal-900 border border-slate-200 dark:border-charcoal-700 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
           {/* Header */}
           <div className="bg-gradient-to-r from-slate-900 via-charcoal-900 to-slate-950 p-4 text-white flex items-center justify-between shadow-md">
             <div className="flex items-center gap-3">

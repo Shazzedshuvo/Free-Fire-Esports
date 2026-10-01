@@ -24,41 +24,66 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, isLoading, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
         router.push('/login');
-      } else if (!['SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'TOURNAMENT_MANAGER', 'MODERATOR'].includes(user.role)) {
+      } else if (user.role !== 'SUPER_ADMIN') {
         router.push('/dashboard');
       }
     }
   }, [user, isLoading, router]);
 
-  if (isLoading || !user) {
+  if (isLoading || !user || user.role !== 'SUPER_ADMIN') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 space-y-4">
         <div className="w-10 h-10 border-4 border-ff-orange border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-gray-400 text-sm font-semibold">ভেরিফাই করা হচ্ছে (Checking Super Admin Access)...</p>
       </div>
     );
   }
 
   const menuItems = [
     { href: '/admin', label: 'Overview', icon: LayoutDashboard },
-    { href: '/admin/tournaments', label: 'Tournaments', icon: Gamepad2 },
-    { href: '/admin/tournaments/create', label: 'Create Tournament', icon: PlusCircle },
     { href: '/admin/deposits', label: 'bKash Deposits', icon: CreditCard },
+    { href: '/admin/tournaments', label: 'Tournaments & Rooms', icon: Gamepad2 },
+    { href: '/admin/financials', label: 'Profit & Loss', icon: Trophy },
+    { href: '/admin/chat', label: 'Live Chat Helpdesk', icon: FileText },
+    { href: '/admin/settings', label: 'Site & Live Stream', icon: Settings },
     { href: '/admin/users', label: 'User Control', icon: Users },
     { href: '/admin/results', label: 'Results & Prizes', icon: Trophy },
     { href: '/admin/notices', label: 'Notice Board', icon: Bell },
-    { href: '/admin/settings', label: 'System Settings', icon: Settings },
     { href: '/admin/audit-logs', label: 'Audit Logs', icon: FileText },
   ];
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row gap-6 py-4">
+      {/* Mobile Top Bar with Hamburger for Admin */}
+      <div className="md:hidden flex items-center justify-between p-4 rounded-2xl bg-charcoal-900 border border-charcoal-800 shadow-lg">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-ff-orange to-ff-red flex items-center justify-center">
+            <ShieldAlert className="w-5 h-5 text-black" />
+          </div>
+          <div>
+            <h2 className="font-display font-black text-xs text-white uppercase tracking-wider">SUPER ADMIN PANEL</h2>
+            <span className="text-[10px] text-ff-amber">Control Center</span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="p-2 rounded-xl bg-charcoal-800 text-gray-200 hover:text-white"
+        >
+          <span className="text-xs font-bold">{mobileMenuOpen ? '✕ বন্ধ করুন' : '☰ মেনু'}</span>
+        </button>
+      </div>
+
       {/* Admin Sidebar */}
-      <aside className="w-full md:w-64 flex-shrink-0 bg-charcoal-900 border border-charcoal-800 rounded-3xl p-5 shadow-2xl flex flex-col justify-between">
+      <aside className={`w-full md:w-64 flex-shrink-0 bg-charcoal-900 border border-charcoal-800 rounded-3xl p-5 shadow-2xl flex flex-col justify-between ${
+        mobileMenuOpen ? 'block' : 'hidden md:flex'
+      }`}>
         <div className="space-y-6">
           {/* Admin Header */}
           <div className="flex items-center gap-3 pb-4 border-b border-charcoal-800">
@@ -70,7 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 ADMIN CONSOLE
               </h2>
               <span className="text-[10px] font-bold text-ff-amber">
-                {user.role}
+                SUPER_ADMIN ONLY
               </span>
             </div>
           </div>
@@ -84,7 +109,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                     isActive
                       ? 'bg-ff-orange text-black shadow-glow-orange/30'
                       : 'text-gray-300 hover:text-white hover:bg-charcoal-800'
@@ -99,7 +125,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         {/* Bottom Actions */}
-        <div className="pt-4 border-t border-charcoal-800 space-y-2">
+        <div className="pt-4 mt-6 border-t border-charcoal-800 space-y-2">
           <Link
             href="/"
             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-gray-400 hover:text-white hover:bg-charcoal-800 transition-colors"
