@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSessionMessages, addChatMessage } from '@/lib/chatStore';
+import { getSessionMessages, addChatMessage, getAutoReply } from '@/lib/chatStore';
 import { getSessionUser } from '@/lib/auth';
 
 export async function GET(req: Request) {
@@ -31,20 +31,42 @@ export async function POST(req: Request) {
     // Check if logged in user
     const currentUser = await getSessionUser();
 
+    const playerName = senderName || currentUser?.fullName || currentUser?.username || 'Player';
+    const playerFfUid = ffUid || currentUser?.ffUid;
+    const playerPhone = phoneNumber || currentUser?.mobileNumber;
+
     const newMsg = addChatMessage({
       sessionId,
       sender: 'user',
-      senderName: senderName || currentUser?.fullName || currentUser?.username || 'Player',
+      senderName: playerName,
       userId: currentUser?.id,
       username: currentUser?.username,
-      fullName: senderName || currentUser?.fullName,
-      ffUid: ffUid || currentUser?.ffUid,
-      phoneNumber: phoneNumber || currentUser?.mobileNumber,
+      fullName: playerName,
+      ffUid: playerFfUid,
+      phoneNumber: playerPhone,
       email: currentUser?.email,
       text: text.trim(),
     });
 
-    return NextResponse.json({ success: true, message: newMsg });
+    // Check for smart automated reply
+    const autoReplyText = getAutoReply(text.trim());
+    let autoReplyMsg = null;
+
+    if (autoReplyText) {
+      autoReplyMsg = addChatMessage({
+        sessionId,
+        sender: 'admin',
+        senderName: 'সাপোর্ট অ্যাসিস্ট্যান্ট (Auto Support)',
+        senderRole: 'ADMIN',
+        text: autoReplyText,
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: newMsg,
+      autoReply: autoReplyMsg,
+    });
   } catch (error) {
     console.error('Error posting chat message:', error);
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 });

@@ -31,6 +31,7 @@ export default function JoinModal({ tournament, onClose, onSuccess }: JoinModalP
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [agreedToRules, setAgreedToRules] = useState(false);
 
   // Duo / Squad team fields
   const [teamName, setTeamName] = useState('');
@@ -60,6 +61,11 @@ export default function JoinModal({ tournament, onClose, onSuccess }: JoinModalP
     e.preventDefault();
     if (!user) {
       router.push('/login');
+      return;
+    }
+
+    if (!agreedToRules) {
+      setError('অনুগ্রহ করে আবশ্যিক টুর্নামেন্ট শর্তাবলী ও আইডি যোগ্যতায় টিক দিয়ে সম্মতি দিন।');
       return;
     }
 
@@ -365,6 +371,38 @@ export default function JoinModal({ tournament, onClose, onSuccess }: JoinModalP
                 </>
               )}
 
+              {/* Strict Tournament Eligibility & Account Rules Highlight */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-red-500/15 border-2 border-amber-500/50 dark:border-ff-orange/50 text-slate-900 dark:text-gray-100 space-y-2.5 shadow-sm">
+                <div className="flex items-center gap-2 text-amber-800 dark:text-ff-amber font-display font-black text-sm">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-500" />
+                  <span>⚠️ আবশ্যিক খেলার নিয়ম ও আইডি শর্তাবলী:</span>
+                </div>
+                <div className="text-xs space-y-1.5 text-slate-700 dark:text-gray-200 font-semibold leading-relaxed">
+                  <p>
+                    • <strong className="text-slate-950 dark:text-white">UID সততা:</strong> রেজিস্ট্রেশনে দেওয়া Free Fire UID দিয়েই কাস্টম রুমে জয়েন করতে হবে। অন্য আইডি দিয়ে জয়েন করলে সরাসরি ডিসকোয়ালিফাই করা হবে।
+                  </p>
+                  <p>
+                    • <strong className="text-slate-950 dark:text-white">আইডি লেভেল:</strong> আপনার ফ্রি ফায়ার আইডি লেভেল অবশ্যই <span className="text-red-600 dark:text-ff-orange font-black">৫০+ (Level 50+)</span> হতে হবে।
+                  </p>
+                  <p>
+                    • <strong className="text-slate-950 dark:text-white">র‍্যাঙ্ক রিকোয়ারমেন্ট:</strong> ফুল ম্যাপ (BR) মোডের জন্য র‍্যাঙ্ক অবশ্যই <span className="text-amber-700 dark:text-ff-amber font-black">Heroic</span> এবং ক্ল্যাশ স্কোয়াড (CS) মোডের জন্য র‍্যাঙ্ক সর্বনিম্ন <span className="text-sky-700 dark:text-sky-400 font-black">Diamond IV</span> হতে হবে।
+                  </p>
+                </div>
+
+                <label className="flex items-start gap-2.5 pt-2 border-t border-amber-500/30 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={agreedToRules}
+                    onChange={(e) => setAgreedToRules(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded text-ff-orange focus:ring-ff-orange accent-ff-orange cursor-pointer"
+                  />
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">
+                    আমি উপরোক্ত সকল নিয়ম এবং আইডি লেভেল ৫০+ ও র‍্যাঙ্ক শর্ত মেনে জয়েন করছি।
+                  </span>
+                </label>
+              </div>
+
               {/* Submit Buttons */}
               <div className="pt-3 border-t border-slate-200 dark:border-charcoal-800 flex items-center gap-3">
                 <button
@@ -376,8 +414,8 @@ export default function JoinModal({ tournament, onClose, onSuccess }: JoinModalP
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-ff-orange to-ff-amber hover:from-amber-400 hover:to-orange-500 text-black font-black uppercase text-sm tracking-wider shadow-glow-orange/30 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                  disabled={loading || !agreedToRules}
+                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-ff-orange to-ff-amber hover:from-amber-400 hover:to-orange-500 text-black font-black uppercase text-sm tracking-wider shadow-glow-orange/30 disabled:opacity-40 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
                 >
                   {loading ? t('loading') : `${t('confirm')} (৳${entryFee})`}
                 </button>

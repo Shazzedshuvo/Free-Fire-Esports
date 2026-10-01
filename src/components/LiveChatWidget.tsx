@@ -6,17 +6,17 @@ import {
   X,
   Send,
   Headphones,
-  Bot,
   User as UserIcon,
-  Clock,
-  Sparkles,
   ExternalLink,
   Flame,
-  CheckCheck,
   Phone,
   Gamepad2,
   ShieldCheck,
   Edit2,
+  HelpCircle,
+  Clock,
+  Sparkles,
+  CheckCircle2,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { usePathname } from 'next/navigation';
@@ -25,6 +25,7 @@ import { OFFICIAL_DEPOSIT_NUMBER } from './DepositModal';
 interface Message {
   id: string;
   sender: 'user' | 'agent';
+  senderName?: string;
   text: string;
   time: string;
   buttons?: { label: string; url: string; icon?: string }[];
@@ -43,16 +44,16 @@ export default function LiveChatWidget() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(1);
+  const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Hide completely on admin routes
   if (pathname?.startsWith('/admin')) {
     return null;
   }
 
+  // Determine user-specific isolated session ID
   const [sessionId, setSessionId] = useState<string>('');
-  
-  // Mandatory User Identification (FF UID + Phone Number)
   const [userInfo, setUserInfo] = useState<ChatUserInfo | null>(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [formName, setFormName] = useState('');
@@ -60,87 +61,82 @@ export default function LiveChatWidget() {
   const [formPhone, setFormPhone] = useState('');
   const [formError, setFormError] = useState('');
 
-  // Initialize chat session & load messages + user info
+  // 1. Establish session isolation per user
   useEffect(() => {
-    let sid = localStorage.getItem('ff_chat_session_id');
-    if (!sid) {
-      sid = `session_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
-      localStorage.setItem('ff_chat_session_id', sid);
-    }
-    setSessionId(sid);
+    let activeSessionId = '';
 
-    // Check saved user info
-    const savedInfo = localStorage.getItem('ff_chat_user_info');
-    if (savedInfo) {
-      try {
-        const parsed = JSON.parse(savedInfo);
-        if (parsed.ffUid && parsed.phone) {
-          setUserInfo(parsed);
-          setFormName(parsed.name || '');
-          setFormFfUid(parsed.ffUid || '');
-          setFormPhone(parsed.phone || '');
-        }
-      } catch (e) {}
-    } else if (user && user.ffUid && user.mobileNumber) {
-      const authUser: ChatUserInfo = {
-        name: user.fullName || user.username,
-        ffUid: user.ffUid,
-        phone: user.mobileNumber,
+    if (user && user.id) {
+      // Dedicated session ID for authenticated user
+      activeSessionId = `user_${user.id}`;
+      const authInfo: ChatUserInfo = {
+        name: user.fullName || user.username || user.ffPlayerName || 'Player',
+        ffUid: user.ffUid || '',
+        phone: user.mobileNumber || '',
       };
-      setUserInfo(authUser);
-      localStorage.setItem('ff_chat_user_info', JSON.stringify(authUser));
-      setFormName(authUser.name);
-      setFormFfUid(authUser.ffUid);
-      setFormPhone(authUser.phone);
+      setUserInfo(authInfo);
+      setFormName(authInfo.name);
+      setFormFfUid(authInfo.ffUid);
+      setFormPhone(authInfo.phone);
+    } else {
+      // Guest session ID
+      let guestId = localStorage.getItem('ff_guest_chat_session_id');
+      if (!guestId) {
+        guestId = `guest_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+        localStorage.setItem('ff_guest_chat_session_id', guestId);
+      }
+      activeSessionId = guestId;
+
+      // Check saved guest info
+      const savedGuest = localStorage.getItem('ff_guest_chat_user_info');
+      if (savedGuest) {
+        try {
+          const parsed = JSON.parse(savedGuest);
+          if (parsed.name || parsed.ffUid) {
+            setUserInfo(parsed);
+            setFormName(parsed.name || '');
+            setFormFfUid(parsed.ffUid || '');
+            setFormPhone(parsed.phone || '');
+          }
+        } catch (e) {}
+      }
     }
 
-    // Initial fetch from backend
-    fetch(`/api/chat?sessionId=${sid}`)
+    setSessionId(activeSessionId);
+
+    // Initial fetch of messages for this specific session
+    fetch(`/api/chat?sessionId=${activeSessionId}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.messages && data.messages.length > 0) {
           const formatted: Message[] = data.messages.map((m: any) => ({
             id: m.id,
             sender: m.sender === 'admin' ? 'agent' : 'user',
+            senderName: m.senderName,
             text: m.text,
             time: m.time,
           }));
           setMessages(formatted);
-          return;
+        } else {
+          // Welcome greeting
+          const defaultMessages: Message[] = [
+            {
+              id: 'welcome_1',
+              sender: 'agent',
+              senderName: 'সাপোর্ট টিম',
+              text: 'আসসালামু আলাইকুম! ফ্রি ফায়ার টুর্নামেন্ট লাইভ সাপোর্টে আপনাকে স্বাগতম। আপনার যেকোনো প্রশ্ন বা সমস্যার জন্য মেসেজ পাঠান, তাৎক্ষণিক অটো-রিপ্লাই ও অ্যাডমিন সহায়তা পাবেন।',
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              buttons: [
+                { label: 'WhatsApp এ কথা বলুন', url: `https://wa.me/88${OFFICIAL_DEPOSIT_NUMBER}` },
+              ],
+            },
+          ];
+          setMessages(defaultMessages);
         }
-
-        // Fallback default message if no history
-        const defaultMessages: Message[] = [
-          {
-            id: '1',
-            sender: 'agent',
-            text: 'আসসালামু আলাইকুম! ফ্রি ফায়ার টুর্নামেন্ট লাইভ সাপোর্টে আপনাকে স্বাগতম। আপনি মেসেজ পাঠালে আমাদের অ্যাডমিন সরাসরি রিপ্লাই দেবেন। টুর্নামেন্ট শুরু হওয়ার ১০ মিনিট আগে রুম আইডি ও পাসওয়ার্ড দেওয়া হবে।',
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            buttons: [
-              { label: 'WhatsApp এ কথা বলুন', url: `https://wa.me/88${OFFICIAL_DEPOSIT_NUMBER}` },
-              { label: 'Telegram চ্যানেলে যোগ দিন', url: 'https://t.me/ff_esports_bd' },
-            ],
-          },
-        ];
-        setMessages(defaultMessages);
       })
       .catch(() => {});
   }, [user]);
 
-  // Sync if logged-in user state updates
-  useEffect(() => {
-    if (user && user.ffUid && user.mobileNumber && (!userInfo || !userInfo.ffUid)) {
-      const updated: ChatUserInfo = {
-        name: user.fullName || user.username,
-        ffUid: user.ffUid,
-        phone: user.mobileNumber,
-      };
-      setUserInfo(updated);
-      localStorage.setItem('ff_chat_user_info', JSON.stringify(updated));
-    }
-  }, [user, userInfo]);
-
-  // Poll for admin replies every 3 seconds when chat is open or periodically
+  // 2. Poll for updates on the active session every 3.5s
   useEffect(() => {
     if (!sessionId) return;
 
@@ -152,11 +148,11 @@ export default function LiveChatWidget() {
             const formatted: Message[] = data.messages.map((m: any) => ({
               id: m.id,
               sender: m.sender === 'admin' ? 'agent' : 'user',
+              senderName: m.senderName,
               text: m.text,
               time: m.time,
             }));
 
-            // Only update if count changed
             setMessages((prev) => {
               if (formatted.length !== prev.length) {
                 if (!isOpen) setUnreadCount((c) => c + 1);
@@ -167,12 +163,12 @@ export default function LiveChatWidget() {
           }
         })
         .catch(() => {});
-    }, 3000);
+    }, 3500);
 
     return () => clearInterval(interval);
   }, [sessionId, isOpen]);
 
-  // Scroll to bottom
+  // Scroll to bottom on message updates
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping, showInfoModal]);
@@ -180,40 +176,43 @@ export default function LiveChatWidget() {
   const handleOpen = () => {
     setIsOpen(true);
     setUnreadCount(0);
-    // If user info (FF UID & Phone) is missing, show the form
-    if (!userInfo || !userInfo.ffUid || !userInfo.phone) {
+    // If user info is completely blank, prompt them to enter details
+    if (!userInfo || !userInfo.name || !userInfo.ffUid) {
       setShowInfoModal(true);
     }
   };
 
   const handleSaveInfo = (e: React.FormEvent) => {
     e.preventDefault();
-    const name = formName.trim() || 'Player';
+    const name = formName.trim();
     const ffUid = formFfUid.trim();
     const phone = formPhone.trim();
 
+    if (!name) {
+      setFormError('অনুগ্রহ করে আপনার নাম দিন');
+      return;
+    }
     if (!ffUid) {
       setFormError('অনুগ্রহ করে আপনার Free Fire UID দিন');
       return;
     }
     if (!phone) {
-      setFormError('অনুগ্রহ করে আপনার ফোন বা WhatsApp নম্বর দিন');
+      setFormError('অনুগ্রহ করে আপনার মোবাইল বা WhatsApp নম্বর দিন');
       return;
     }
 
     const info: ChatUserInfo = { name, ffUid, phone };
     setUserInfo(info);
-    localStorage.setItem('ff_chat_user_info', JSON.stringify(info));
+    if (!user) {
+      localStorage.setItem('ff_guest_chat_user_info', JSON.stringify(info));
+    }
     setShowInfoModal(false);
     setFormError('');
-
-    // Send introduction to admin
-    handleSend(`হ্যালো অ্যাডমিন! আমি ${name} (FF UID: ${ffUid}, মোবাইল: ${phone})। আমার একটি জিজ্ঞাসা আছে।`);
   };
 
   const handleSend = async (textToSend?: string) => {
     // If user info is not set, force modal open
-    if (!userInfo || !userInfo.ffUid || !userInfo.phone) {
+    if (!userInfo || !userInfo.name || !userInfo.ffUid) {
       setShowInfoModal(true);
       return;
     }
@@ -222,95 +221,85 @@ export default function LiveChatWidget() {
     if (!query) return;
 
     const userMsg: Message = {
-      id: Date.now().toString(),
+      id: `client_${Date.now()}`,
       sender: 'user',
+      senderName: userInfo.name,
       text: query,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
     setMessages((prev) => [...prev, userMsg]);
     if (!textToSend) setInput('');
+    setIsTyping(true);
 
-    // Send to backend API with FF UID and Phone Number!
     try {
-      await fetch('/api/chat', {
+      const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sessionId: sessionId || localStorage.getItem('ff_chat_session_id'),
+          sessionId,
           text: query,
           senderName: userInfo.name,
           ffUid: userInfo.ffUid,
           phoneNumber: userInfo.phone,
         }),
       });
+
+      const data = await res.json();
+
+      // If backend generated an auto-reply, display it with a short natural typing delay
+      if (data.autoReply) {
+        setTimeout(() => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: data.autoReply.id,
+              sender: 'agent',
+              senderName: data.autoReply.senderName || 'সাপোর্ট অ্যাসিস্ট্যান্ট',
+              text: data.autoReply.text,
+              time: data.autoReply.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            },
+          ]);
+          setIsTyping(false);
+        }, 500);
+      } else {
+        setIsTyping(false);
+      }
     } catch (e) {
       console.error(e);
-    }
-
-    // Auto-assistant quick hints
-    const lower = query.toLowerCase();
-    if (lower.includes('রুম') || lower.includes('room') || lower.includes('পাস') || lower.includes('pass') || lower.includes('আইডি')) {
-      setIsTyping(true);
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: (Date.now() + 1).toString(),
-            sender: 'agent',
-            text: '✅ টুর্নামেন্ট শুরু হওয়ার ঠিক ১০ মিনিট আগে "My Matches" পেজে রুম আইডি ও পাসওয়ার্ড স্বয়ংক্রিয়ভাবে দৃশ্যমান হবে। দয়া করে ম্যাচ শুরুর ৫ মিনিট আগে কাস্টম রুমে প্রবেশ করুন। অ্যাডমিনও কিছুক্ষণের মধ্যে রিপ্লাই দেবেন।',
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          },
-        ]);
-        setIsTyping(false);
-      }, 700);
-    } else if (lower.includes('ডিপোজিট') || lower.includes('deposit') || lower.includes('টাকা') || lower.includes('trx') || lower.includes('বিকাশ')) {
-      setIsTyping(true);
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: (Date.now() + 1).toString(),
-            sender: 'agent',
-            text: `💰 ডিপোজিট নম্বর: ${OFFICIAL_DEPOSIT_NUMBER} (Send Money)। টাকা পাঠিয়ে TrxID সাবমিট করুন। অ্যাডমিন অবিলম্বে চেক করে ওয়ালেটে টাকা অ্যাড করবেন।`,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            buttons: [
-              { label: 'WhatsApp এ কথা বলুন', url: `https://wa.me/88${OFFICIAL_DEPOSIT_NUMBER}` },
-            ],
-          },
-        ]);
-        setIsTyping(false);
-      }, 700);
+      setIsTyping(false);
     }
   };
 
   const quickQuestions = [
-    'রুম আইডি ও পাসওয়ার্ড কখন পাবো?',
-    'ডিপোজিট নম্বর কত?',
-    'টাকা অ্যাড হতে কত সময় লাগে?',
-    'অ্যাডমিনের সাথে সরাসরি কথা বলতে চাই',
+    { label: '🔑 রুম আইডি ও পাসওয়ার্ড কখন পাবো?', query: 'রুম আইডি ও পাসওয়ার্ড কখন পাবো?' },
+    { label: '💰 ডিপোজিট নম্বর কত?', query: 'ডিপোজিট নম্বর কত?' },
+    { label: '⏱️ টাকা অ্যাড হতে কত সময় লাগে?', query: 'টাকা অ্যাড হতে কত সময় লাগে?' },
+    { label: '⚠️ খেলার নিয়ম ও লেভেল যোগ্যতা?', query: 'খেলার নিয়ম ও লেভেল যোগ্যতা কি?' },
+    { label: '💳 উইথড্র করার নিয়ম কি?', query: 'উইথড্র করার নিয়ম কি?' },
+    { label: '👨‍💻 সরাসরি অ্যাডমিনের সাহায্য চাই', query: 'অ্যাডমিনের সাথে সরাসরি কথা বলতে চাই' },
   ];
 
   return (
     <>
-      {/* Floating Static Trigger Button (Bottom Right) */}
+      {/* Floating Trigger Button */}
       {!isOpen && (
         <div className="fixed bottom-4 right-3 sm:bottom-6 sm:right-6 z-50 flex items-center gap-3">
           <button
             onClick={handleOpen}
-            className="group relative flex items-center gap-2 sm:gap-3 px-4 py-2.5 sm:px-5 sm:py-3.5 rounded-full bg-gradient-to-r from-ff-orange via-amber-500 to-ff-red text-slate-950 font-black shadow-glow-orange hover:scale-105 active:scale-95 transition-all text-xs sm:text-sm"
+            className="group relative flex items-center gap-2 sm:gap-3 px-4 py-2.5 sm:px-5 sm:py-3.5 rounded-full bg-gradient-to-r from-ff-orange via-amber-500 to-ff-red text-slate-950 font-black shadow-glow-orange hover:scale-105 active:scale-95 transition-all text-xs sm:text-sm border border-amber-300"
             aria-label="Open Live Chat"
           >
             <div className="relative">
-              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-slate-950 fill-current" />
+              <Headphones className="w-4 h-4 sm:w-5 sm:h-5 text-slate-950 fill-current" />
               <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white animate-pulse"></span>
             </div>
             <span className="text-xs sm:text-sm uppercase tracking-wider font-display font-black">
-              LIVE CHAT
+              LIVE SUPPORT
             </span>
 
             {unreadCount > 0 && (
-              <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-black text-white text-[10px] sm:text-xs font-black flex items-center justify-center -ml-0.5 sm:-ml-1">
+              <span className="w-5 h-5 rounded-full bg-black text-white text-[11px] font-black flex items-center justify-center -ml-1">
                 {unreadCount}
               </span>
             )}
@@ -318,64 +307,62 @@ export default function LiveChatWidget() {
         </div>
       )}
 
-      {/* Floating Live Chat Window */}
+      {/* Floating Chat Modal */}
       {isOpen && (
-        <div className="fixed inset-x-2 bottom-2 sm:inset-x-auto sm:bottom-6 sm:right-6 z-50 sm:w-[400px] max-w-[400px] h-[85vh] sm:h-[560px] max-h-[620px] bg-white dark:bg-charcoal-900 border border-slate-200 dark:border-charcoal-700 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
+        <div className="fixed inset-x-2 bottom-2 sm:inset-x-auto sm:bottom-6 sm:right-6 z-50 sm:w-[410px] max-w-[420px] h-[85vh] sm:h-[580px] max-h-[630px] bg-white dark:bg-charcoal-900 border border-slate-200 dark:border-charcoal-700 rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
           {/* Header */}
           <div className="bg-gradient-to-r from-slate-900 via-charcoal-900 to-slate-950 p-4 text-white flex items-center justify-between shadow-md">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-ff-orange to-ff-red flex items-center justify-center shadow-glow-orange">
-                  <Headphones className="w-5 h-5 text-black" />
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-ff-orange to-ff-amber flex items-center justify-center shadow-glow-orange text-slate-950">
+                  <Headphones className="w-5 h-5" />
                 </div>
                 <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-charcoal-900"></span>
               </div>
-              <div>
+              <div className="max-w-[210px] sm:max-w-[240px]">
                 <h3 className="font-display font-bold text-sm text-white flex items-center gap-2">
                   <span>LIVE SUPPORT</span>
                   <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold">
                     ONLINE
                   </span>
                 </h3>
-                <p className="text-[11px] text-gray-300">
-                  {userInfo ? `${userInfo.name} (UID: ${userInfo.ffUid})` : 'ফ্রি ফায়ার অফিশিয়াল সাপোর্ট'}
+                <p className="text-[11px] text-gray-300 truncate">
+                  {userInfo?.name ? `${userInfo.name} (UID: ${userInfo.ffUid || 'N/A'})` : 'ফ্রি ফায়ার অফিশিয়াল সাপোর্ট'}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5">
-              {userInfo && (
-                <button
-                  type="button"
-                  onClick={() => setShowInfoModal(true)}
-                  className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
-                  title="তথ্য পরিবর্তন করুন"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-              )}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setShowInfoModal(true)}
+                className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
+                title="প্রোফাইল তথ্য আপডেট করুন"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors"
-                title="Close chat"
+                title="বন্ধ করুন"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
           </div>
 
-          {/* ================= MANDATORY CONTACT INFO FORM MODAL ================= */}
+          {/* Mandatory Contact Info Modal */}
           {showInfoModal ? (
             <div className="flex-1 p-5 overflow-y-auto bg-slate-50 dark:bg-charcoal-950 flex flex-col justify-center space-y-4">
-              <div className="text-center space-y-2">
+              <div className="text-center space-y-1.5">
                 <div className="w-12 h-12 rounded-2xl bg-orange-500/15 border border-orange-500/30 text-ff-orange flex items-center justify-center mx-auto shadow-sm">
                   <Gamepad2 className="w-6 h-6" />
                 </div>
                 <h4 className="font-display font-black text-lg text-slate-900 dark:text-white">
-                  লাইভ চ্যাট শুরু করার নিয়ম
+                  আপনার প্লেয়ার তথ্য দিন
                 </h4>
                 <p className="text-xs text-slate-600 dark:text-gray-300 font-semibold leading-relaxed">
-                  সরাসরি অ্যাডমিনের সাথে যোগাযোগ ও পরবর্তী আপডেটের জন্য আপনার Free Fire UID এবং ফোন নম্বর দিন:
+                  সরাসরি সহায়তা ও দ্রুত উত্তরের জন্য আপনার নাম, Free Fire UID এবং মোবাইল নম্বর পূরণ করুন:
                 </p>
               </div>
 
@@ -385,7 +372,7 @@ export default function LiveChatWidget() {
                 </div>
               )}
 
-              <form onSubmit={handleSaveInfo} className="space-y-3.5">
+              <form onSubmit={handleSaveInfo} className="space-y-3">
                 <div>
                   <label className="text-xs font-bold text-slate-700 dark:text-gray-300 block mb-1">
                     আপনার নাম (Player Name) *
@@ -437,12 +424,23 @@ export default function LiveChatWidget() {
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-ff-orange via-amber-500 to-ff-amber hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black uppercase text-xs tracking-wider shadow-glow-orange transition-all active:scale-95"
-                >
-                  🚀 তথ্য সংরক্ষণ ও চ্যাট শুরু করুন
-                </button>
+                <div className="pt-1 flex gap-2">
+                  {userInfo && userInfo.name && (
+                    <button
+                      type="button"
+                      onClick={() => setShowInfoModal(false)}
+                      className="py-2.5 px-4 rounded-xl bg-slate-200 dark:bg-charcoal-800 text-slate-700 dark:text-gray-300 font-bold text-xs"
+                    >
+                      বাতিল
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-ff-orange via-amber-500 to-ff-amber hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black uppercase text-xs tracking-wider shadow-glow-orange transition-all"
+                  >
+                    🚀 সংরক্ষণ করুন ও চ্যাট শুরু করুন
+                  </button>
+                </div>
               </form>
             </div>
           ) : (
@@ -450,9 +448,12 @@ export default function LiveChatWidget() {
               {/* Messages Body */}
               <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-slate-50/70 dark:bg-charcoal-950/70 text-xs">
                 {/* 10 Min Warning Banner in Chat */}
-                <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-900 dark:text-ff-amber text-[11px] font-bold flex items-center gap-2">
-                  <span>🔔</span>
-                  <span>টুর্নামেন্ট শুরু হওয়ার ঠিক ১০ মিনিট আগে রুম আইডি ও পাসওয়ার্ড দেওয়া হবে।</span>
+                <div className="p-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-950 dark:text-ff-amber text-[11px] font-bold flex items-start gap-2.5 shadow-sm">
+                  <span className="text-base mt-[-2px]">📢</span>
+                  <div className="leading-tight">
+                    <span className="font-extrabold block">জরুরি টুর্নামেন্ট নোটিশ:</span>
+                    <span>ম্যাচ শুরু হওয়ার ঠিক ১০ মিনিট আগে রুম আইডি ও পাসওয়ার্ড দেওয়া হবে। অবশ্যই রেজিষ্ট্রিকৃত FF UID দিয়ে খেলবেন।</span>
+                  </div>
                 </div>
 
                 {messages.map((msg) => (
@@ -460,8 +461,14 @@ export default function LiveChatWidget() {
                     key={msg.id}
                     className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
                   >
+                    {msg.sender === 'agent' && (
+                      <span className="text-[10px] text-ff-orange font-bold px-1 mb-0.5">
+                        🛡️ {msg.senderName || 'সাপোর্ট সহকারী'}
+                      </span>
+                    )}
+
                     <div
-                      className={`max-w-[85%] p-3.5 rounded-2xl shadow-sm text-xs sm:text-[13px] leading-relaxed ${
+                      className={`max-w-[85%] p-3.5 rounded-2xl shadow-sm text-xs sm:text-[13px] leading-relaxed whitespace-pre-line ${
                         msg.sender === 'user'
                           ? 'bg-gradient-to-r from-ff-orange to-ff-amber text-slate-950 rounded-br-none font-bold'
                           : 'bg-white dark:bg-charcoal-900 border border-slate-200 dark:border-charcoal-800 text-slate-900 dark:text-gray-100 rounded-bl-none font-semibold'
@@ -470,7 +477,7 @@ export default function LiveChatWidget() {
                       <p>{msg.text}</p>
 
                       {msg.buttons && (
-                        <div className="mt-2.5 space-y-1.5 pt-2 border-t border-slate-200/50 dark:border-charcoal-700/50">
+                        <div className="mt-2.5 space-y-1.5 pt-2 border-t border-slate-200/60 dark:border-charcoal-700/60">
                           {msg.buttons.map((btn, idx) => (
                             <a
                               key={idx}
@@ -493,29 +500,35 @@ export default function LiveChatWidget() {
                 ))}
 
                 {isTyping && (
-                  <div className="flex items-center gap-1.5 p-2.5 rounded-2xl bg-white dark:bg-charcoal-900 border border-slate-200 dark:border-charcoal-800 w-16 text-ff-orange">
-                    <span className="w-1.5 h-1.5 bg-ff-orange rounded-full animate-bounce"></span>
-                    <span className="w-1.5 h-1.5 bg-ff-orange rounded-full animate-bounce delay-150"></span>
-                    <span className="w-1.5 h-1.5 bg-ff-orange rounded-full animate-bounce delay-300"></span>
+                  <div className="flex items-center gap-1.5 p-3 rounded-2xl bg-white dark:bg-charcoal-900 border border-slate-200 dark:border-charcoal-800 w-20 text-ff-orange shadow-sm">
+                    <span className="w-2 h-2 bg-ff-orange rounded-full animate-bounce"></span>
+                    <span className="w-2 h-2 bg-ff-orange rounded-full animate-bounce delay-150"></span>
+                    <span className="w-2 h-2 bg-ff-orange rounded-full animate-bounce delay-300"></span>
                   </div>
                 )}
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Quick Questions Pills */}
-              <div className="px-3 py-2 bg-white dark:bg-charcoal-900 border-t border-slate-200 dark:border-charcoal-800 flex items-center gap-1.5 overflow-x-auto">
-                {quickQuestions.map((q, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleSend(q)}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-charcoal-800 hover:bg-orange-500/15 hover:text-ff-orange border border-slate-200 dark:border-charcoal-700 text-xs font-bold text-slate-700 dark:text-gray-300 whitespace-nowrap transition-colors"
-                  >
-                    {q}
-                  </button>
-                ))}
+              {/* Quick Questions Interactive Pills */}
+              <div className="p-2 bg-white dark:bg-charcoal-900 border-t border-slate-200 dark:border-charcoal-800">
+                <div className="text-[10px] font-bold text-slate-500 dark:text-gray-400 mb-1 px-1 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-ff-orange" />
+                  <span>কমন প্রশ্নের তাৎক্ষণিক উত্তর:</span>
+                </div>
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                  {quickQuestions.map((q, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSend(q.query)}
+                      className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-charcoal-800 hover:bg-orange-500/15 hover:text-ff-orange hover:border-ff-orange/40 border border-slate-200 dark:border-charcoal-700 text-xs font-bold text-slate-700 dark:text-gray-200 whitespace-nowrap transition-colors shadow-xs"
+                    >
+                      {q.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Input Form */}
+              {/* Chat Input Form */}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -527,14 +540,14 @@ export default function LiveChatWidget() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="বার্তা লিখুন / Type message..."
-                  className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-charcoal-950 border border-slate-200 dark:border-charcoal-700 text-slate-900 dark:text-white text-xs font-medium focus:border-ff-orange focus:outline-none"
+                  placeholder="বার্তা লিখুন / Type your message..."
+                  className="flex-1 px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-charcoal-950 border border-slate-200 dark:border-charcoal-700 text-slate-900 dark:text-white text-xs font-semibold focus:border-ff-orange focus:outline-none"
                 />
                 <button
                   type="submit"
                   disabled={!input.trim()}
-                  className="p-2.5 rounded-xl bg-gradient-to-r from-ff-orange to-ff-amber hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black disabled:opacity-40 transition-all shadow-sm"
-                  title="Send"
+                  className="p-2.5 rounded-xl bg-gradient-to-r from-ff-orange to-ff-amber hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black disabled:opacity-40 transition-all shadow-sm flex-shrink-0"
+                  title="পাঠান"
                 >
                   <Send className="w-4 h-4" />
                 </button>
