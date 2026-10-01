@@ -152,36 +152,36 @@ export default function AdminDepositsPage() {
     .reduce((sum, d) => sum + (d.amount || 0), 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Title & Quick Stats */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 sm:p-7 rounded-3xl bg-white dark:bg-charcoal-900 border border-slate-200 dark:border-charcoal-800 shadow-xl">
         <div>
-          <h1 className="font-display font-black text-2xl text-white tracking-wide flex items-center gap-2">
-            <CreditCard className="w-6 h-6 text-ff-orange" />
-            <span>PLAYER DEPOSIT VERIFICATION</span>
+          <h1 className="font-display font-black text-2xl sm:text-3xl text-slate-900 dark:text-white tracking-wide flex items-center gap-3">
+            <CreditCard className="w-7 h-7 text-ff-orange" />
+            <span>PLAYER DEPOSIT VERIFICATION (ডিপোজিট ভেরিফিকেশন)</span>
           </h1>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Review player deposit submissions (bKash, Nagad, Upay, Rocket), cross-verify TrxID & Screenshot, and approve instant wallet credits.
+          <p className="text-sm text-slate-600 dark:text-gray-300 font-semibold mt-1">
+            প্লেয়ারদের বিকাশ, নগদ, উপায় ডিপোজিট রিকোয়েস্ট যাচাই করুন এবং সরাসরি ওয়ালেটে টাকা অনুমোদন (Approve) করুন।
           </p>
         </div>
 
         {/* Quick Stats Cards */}
         <div className="flex items-center gap-3">
-          <div className="px-3.5 py-2 rounded-xl bg-charcoal-900 border border-charcoal-800 text-right">
-            <span className="text-[10px] text-gray-400 block font-bold uppercase">Pending Requests</span>
-            <span className="text-lg font-black text-amber-400">{pendingCount}</span>
+          <div className="px-5 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-right">
+            <span className="text-xs text-amber-700 dark:text-amber-400 block font-black uppercase">Pending (অপেক্ষমান)</span>
+            <span className="text-2xl font-black text-amber-600 dark:text-amber-400">{pendingCount}</span>
           </div>
-          <div className="px-3.5 py-2 rounded-xl bg-charcoal-900 border border-charcoal-800 text-right">
-            <span className="text-[10px] text-gray-400 block font-bold uppercase">Approved Total</span>
-            <span className="text-lg font-black text-emerald-400">৳{totalApprovedAmount}</span>
+          <div className="px-5 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-right">
+            <span className="text-xs text-emerald-700 dark:text-emerald-400 block font-black uppercase">Approved Total (মোট অনুমোদিত)</span>
+            <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">৳{totalApprovedAmount}</span>
           </div>
         </div>
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-4 rounded-2xl bg-charcoal-900 border border-charcoal-800">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-white dark:bg-charcoal-900 border border-slate-200 dark:border-charcoal-800 shadow-md">
         {/* Status Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
           {[
             { key: 'ALL', label: 'All Deposits' },
             { key: 'PENDING', label: `Pending (${pendingCount})` },
@@ -191,10 +191,10 @@ export default function AdminDepositsPage() {
             <button
               key={tab.key}
               onClick={() => setStatusFilter(tab.key)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                 statusFilter === tab.key
-                  ? 'bg-ff-orange text-black shadow-glow-orange/30'
-                  : 'text-gray-400 hover:text-white bg-charcoal-800'
+                  ? 'bg-ff-orange text-black font-black shadow-md'
+                  : 'text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-charcoal-800'
               }`}
             >
               {tab.label}
@@ -204,19 +204,19 @@ export default function AdminDepositsPage() {
 
         {/* Search */}
         <form onSubmit={handleSearchSubmit} className="flex gap-2">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <div className="relative flex-1 sm:w-72">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search UID, TrxID, username, email..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-charcoal-950 border border-charcoal-700 text-white text-xs focus:border-ff-orange focus:outline-none"
+              placeholder="Search UID, TrxID, username..."
+              className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-charcoal-950 border border-slate-300 dark:border-charcoal-700 text-slate-900 dark:text-white text-xs sm:text-sm focus:border-ff-orange focus:outline-none shadow-sm"
             />
           </div>
           <button
             type="submit"
-            className="px-3.5 py-1.5 rounded-xl bg-charcoal-800 hover:bg-charcoal-700 text-xs font-bold text-gray-200 transition-colors"
+            className="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-charcoal-800 dark:hover:bg-charcoal-700 text-xs sm:text-sm font-bold text-slate-800 dark:text-gray-200 transition-colors"
           >
             Search
           </button>
@@ -224,121 +224,121 @@ export default function AdminDepositsPage() {
       </div>
 
       {/* Deposits Table */}
-      <div className="p-6 rounded-2xl bg-charcoal-900 border border-charcoal-800 shadow-xl overflow-hidden">
+      <div className="p-6 rounded-3xl bg-white dark:bg-charcoal-900 border border-slate-200 dark:border-charcoal-800 shadow-xl overflow-hidden">
         {loading ? (
           <div className="py-16 text-center">
-            <div className="w-8 h-8 border-4 border-ff-orange border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <div className="w-10 h-10 border-4 border-ff-orange border-t-transparent rounded-full animate-spin mx-auto"></div>
           </div>
         ) : deposits.length === 0 ? (
-          <div className="py-12 text-center text-gray-500 text-xs">
+          <div className="py-12 text-center text-slate-500 dark:text-gray-400 text-sm font-semibold">
             No deposit requests found.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-charcoal-950 text-gray-400 uppercase text-[10px]">
+            <table className="w-full text-xs sm:text-sm text-left">
+              <thead className="bg-slate-100 dark:bg-charcoal-950 text-slate-700 dark:text-gray-300 uppercase text-xs font-black">
                 <tr>
-                  <th className="py-3 px-3">Date & Time</th>
-                  <th className="py-3 px-3">Provider</th>
-                  <th className="py-3 px-3">Player Details (Name, UID, Email)</th>
-                  <th className="py-3 px-3">Deposit Amount</th>
-                  <th className="py-3 px-3">Sender Mobile</th>
-                  <th className="py-3 px-3">Transaction ID (TrxID)</th>
-                  <th className="py-3 px-3 text-center">Screenshot (SS)</th>
-                  <th className="py-3 px-3">Status</th>
-                  <th className="py-3 px-3 text-right">Action (Approve / Reject)</th>
+                  <th className="py-3.5 px-3">Date & Time</th>
+                  <th className="py-3.5 px-3">Provider</th>
+                  <th className="py-3.5 px-3">Player Details (Name, UID, Email)</th>
+                  <th className="py-3.5 px-3">Amount</th>
+                  <th className="py-3.5 px-3">Sender Mobile</th>
+                  <th className="py-3.5 px-3">Transaction ID (TrxID)</th>
+                  <th className="py-3.5 px-3 text-center">Receipt (SS)</th>
+                  <th className="py-3.5 px-3">Status</th>
+                  <th className="py-3.5 px-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-charcoal-800">
+              <tbody className="divide-y divide-slate-200 dark:divide-charcoal-800">
                 {deposits.map((d) => (
-                  <tr key={d.id} className="hover:bg-charcoal-800/40 transition-colors">
+                  <tr key={d.id} className="hover:bg-slate-50 dark:hover:bg-charcoal-800/40 transition-colors">
                     {/* Date */}
-                    <td className="py-3 px-3 text-gray-400 whitespace-nowrap">
-                      <div>{new Date(d.createdAt).toLocaleDateString()}</div>
-                      <div className="text-[10px] text-gray-500">
+                    <td className="py-3.5 px-3 text-slate-600 dark:text-gray-300 whitespace-nowrap text-xs">
+                      <div className="font-bold">{new Date(d.createdAt).toLocaleDateString()}</div>
+                      <div className="text-[11px] text-slate-500 dark:text-gray-400 font-mono">
                         {new Date(d.createdAt).toLocaleTimeString()}
                       </div>
                     </td>
 
                     {/* Provider */}
-                    <td className="py-3 px-3 whitespace-nowrap">
+                    <td className="py-3.5 px-3 whitespace-nowrap">
                       {getProviderBadge(d.method)}
                     </td>
 
                     {/* Player Details: Name, @Username, FF UID, Email */}
-                    <td className="py-3 px-3">
-                      <div className="space-y-0.5">
-                        <p className="font-bold text-white text-sm flex items-center gap-1.5">
+                    <td className="py-3.5 px-3">
+                      <div className="space-y-1">
+                        <p className="font-black text-slate-900 dark:text-white text-sm sm:text-base flex items-center gap-1.5">
                           <span>{d.user?.fullName || 'User'}</span>
-                          <span className="text-[11px] font-semibold text-ff-amber">@{d.user?.username}</span>
+                          <span className="text-xs font-black text-orange-600 dark:text-ff-amber">@{d.user?.username}</span>
                         </p>
                         
                         {/* Free Fire UID */}
-                        <div className="flex items-center gap-1.5 text-[11px] text-gray-300">
-                          <Gamepad2 className="w-3.5 h-3.5 text-ff-orange flex-shrink-0" />
-                          <span className="font-mono font-bold text-white bg-charcoal-950 px-1.5 py-0.5 rounded border border-charcoal-700">
+                        <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-gray-300 font-medium">
+                          <Gamepad2 className="w-4 h-4 text-ff-orange flex-shrink-0" />
+                          <span className="font-mono font-black text-slate-900 dark:text-white bg-slate-100 dark:bg-charcoal-950 px-2 py-0.5 rounded border border-slate-300 dark:border-charcoal-700">
                             FF UID: {d.user?.ffUid || 'Not set'}
                           </span>
                           {d.user?.ffUid && (
                             <button
                               type="button"
                               onClick={() => handleCopy(d.user.ffUid, `uid-${d.id}`)}
-                              className="text-gray-400 hover:text-white"
+                              className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-0.5"
                               title="Copy FF UID"
                             >
-                              {copiedId === `uid-${d.id}` ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                              {copiedId === `uid-${d.id}` ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                             </button>
                           )}
                         </div>
 
                         {/* Email */}
-                        <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                          <Mail className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                          <span>{d.user?.email || 'No email provided'}</span>
+                        <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-gray-400 font-medium">
+                          <Mail className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                          <span>{d.user?.email || 'No email'}</span>
                         </div>
                       </div>
                     </td>
 
                     {/* Deposit Amount */}
-                    <td className="py-3 px-3 font-display font-black text-base text-emerald-400 whitespace-nowrap">
+                    <td className="py-3.5 px-3 font-display font-black text-xl text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                       ৳{d.amount}
                     </td>
 
                     {/* Sender Mobile */}
-                    <td className="py-3 px-3 font-mono text-gray-300 whitespace-nowrap">
+                    <td className="py-3.5 px-3 font-mono font-bold text-slate-800 dark:text-gray-200 whitespace-nowrap text-sm">
                       {d.senderNumber}
                     </td>
 
                     {/* TrxID */}
-                    <td className="py-3 px-3 whitespace-nowrap">
-                      <div className="inline-flex items-center gap-1 bg-charcoal-950 px-2 py-1 rounded border border-charcoal-800">
-                        <span className="font-mono font-bold text-white">
+                    <td className="py-3.5 px-3 whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1.5 bg-slate-100 dark:bg-charcoal-950 px-2.5 py-1 rounded-xl border border-slate-300 dark:border-charcoal-800 shadow-sm">
+                        <span className="font-mono font-black text-slate-900 dark:text-white text-xs sm:text-sm">
                           {d.transactionId}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleCopy(d.transactionId, `trx-${d.id}`)}
-                          className="text-gray-400 hover:text-white p-0.5"
+                          className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-0.5"
                           title="Copy TrxID"
                         >
-                          {copiedId === `trx-${d.id}` ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          {copiedId === `trx-${d.id}` ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       </div>
                     </td>
 
                     {/* Screenshot Preview */}
-                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                    <td className="py-3.5 px-3 text-center whitespace-nowrap">
                       {d.screenshotUrl ? (
                         <button
                           type="button"
                           onClick={() => setPreviewScreenshot(d.screenshotUrl)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-charcoal-800 hover:bg-charcoal-700 text-ff-amber border border-charcoal-700 text-[11px] font-bold transition-all shadow-sm group"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-charcoal-800 dark:hover:bg-charcoal-700 text-slate-800 dark:text-ff-amber border border-slate-300 dark:border-charcoal-700 text-xs font-bold transition-all shadow-sm group"
                         >
-                          <ImageIcon className="w-3.5 h-3.5 text-ff-orange group-hover:scale-110 transition-transform" />
+                          <ImageIcon className="w-4 h-4 text-ff-orange group-hover:scale-110 transition-transform" />
                           <span>View SS</span>
                         </button>
                       ) : (
-                        <span className="text-[10px] text-gray-500 italic">No SS</span>
+                        <span className="text-xs text-slate-400 italic">No SS</span>
                       )}
                     </td>
 

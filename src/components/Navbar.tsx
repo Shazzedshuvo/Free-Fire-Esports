@@ -46,7 +46,10 @@ export default function Navbar() {
     { href: '/support', label: t('nav_support'), icon: HelpCircle },
   ];
 
-  const isAdmin = user && ['SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'TOURNAMENT_MANAGER', 'MODERATOR'].includes(user.role);
+  // Hide public Navbar completely when inside Admin panel
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 dark:bg-charcoal-900/95 backdrop-blur-md border-b border-slate-200 dark:border-charcoal-800 shadow-sm transition-colors duration-200">
@@ -208,17 +211,7 @@ export default function Navbar() {
                       <span>{t('profile_settings')}</span>
                     </Link>
 
-                    {isAdmin && (
-                      <div className="pt-1 mt-1 border-t border-slate-100 dark:border-charcoal-800">
-                        <Link
-                          href="/admin"
-                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-orange-700 dark:text-amber-300 font-bold hover:bg-orange-50 dark:hover:bg-ff-orange/20 transition-colors"
-                        >
-                          <Shield className="w-4 h-4 text-orange-600 dark:text-amber-400" />
-                          <span>{t('nav_admin')}</span>
-                        </Link>
-                      </div>
-                    )}
+
 
                     <div className="pt-1 mt-1 border-t border-slate-100 dark:border-charcoal-800">
                       <button
@@ -282,17 +275,6 @@ export default function Navbar() {
               </Link>
             );
           })}
-
-          {user && isAdmin && (
-            <Link
-              href="/admin"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold text-amber-300 bg-amber-500/10 border border-amber-500/30"
-            >
-              <Shield className="w-4 h-4 text-amber-400" />
-              <span>{t('nav_admin')}</span>
-            </Link>
-          )}
         </div>
       )}
     </header>

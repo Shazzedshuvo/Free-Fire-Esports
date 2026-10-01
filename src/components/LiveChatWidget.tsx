@@ -19,6 +19,7 @@ import {
   Edit2,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { usePathname } from 'next/navigation';
 import { OFFICIAL_DEPOSIT_NUMBER } from './DepositModal';
 
 interface Message {
@@ -37,12 +38,17 @@ interface ChatUserInfo {
 
 export default function LiveChatWidget() {
   const { user } = useAuth();
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [unreadCount, setUnreadCount] = useState(1);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   const [sessionId, setSessionId] = useState<string>('');
   

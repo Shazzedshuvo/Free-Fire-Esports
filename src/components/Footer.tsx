@@ -2,11 +2,17 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Flame, ShieldCheck, Headphones, Zap } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function Footer() {
   const { t } = useLanguage();
+  const pathname = usePathname();
+
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <footer className="bg-white dark:bg-charcoal-900 border-t border-slate-200 dark:border-charcoal-800 text-slate-600 dark:text-gray-400 text-sm mt-16 pb-20 md:pb-8 shadow-inner">

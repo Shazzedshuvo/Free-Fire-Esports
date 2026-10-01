@@ -11,13 +11,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Please enter your email/username and password.' }, { status: 400 });
     }
 
-    const identifier = emailOrUsername.trim().toLowerCase();
+    const cleanInput = emailOrUsername.trim();
+    const identifier = cleanInput.toLowerCase().replace(/\s+/g, '');
+    
+    // Check possible aliases for admin if entered with variation
+    const emailQueries = [{ email: identifier }, { username: cleanInput }];
+    if (identifier === 'admin@123.gmail.com') {
+      emailQueries.push({ email: 'admni@123.gmail.com' });
+    } else if (identifier === 'admni@123.gmail.com') {
+      emailQueries.push({ email: 'admin@123.gmail.com' });
+    }
+
     const user = await prisma.user.findFirst({
       where: {
-        OR: [
-          { email: identifier },
-          { username: emailOrUsername.trim() },
-        ],
+        OR: emailQueries,
       },
       include: {
         wallet: true,

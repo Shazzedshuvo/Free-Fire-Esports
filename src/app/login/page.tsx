@@ -22,23 +22,16 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    const res = await login({ emailOrUsername, password });
+    const res: any = await login({ emailOrUsername, password });
     if (!res.success) {
-      setError(res.error || 'Login failed.');
+      setError(res.error || 'Login failed. Check your email/username and password.');
       setLoading(false);
     } else {
-      router.push('/dashboard');
-    }
-  };
-
-  // Quick Demo fill buttons
-  const fillDemo = (userRole: 'player' | 'admin') => {
-    if (userRole === 'player') {
-      setEmailOrUsername('player@freefire.com');
-      setPassword('player123');
-    } else {
-      setEmailOrUsername('admin@freefire.com');
-      setPassword('admin123');
+      if (res.user?.role === 'SUPER_ADMIN') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     }
   };
 
@@ -56,27 +49,6 @@ export default function LoginPage() {
           <p className="text-xs text-slate-600 dark:text-gray-400 font-medium">
             Enter your credentials to manage your wallet and tournaments.
           </p>
-        </div>
-
-        {/* Demo Fast Fill Pill */}
-        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-charcoal-950 border border-slate-200 dark:border-charcoal-800 flex items-center justify-between text-xs">
-          <span className="text-slate-600 dark:text-gray-400 font-bold">Quick Demo Accounts:</span>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => fillDemo('player')}
-              className="px-2.5 py-1 rounded bg-orange-500/15 hover:bg-orange-500/25 text-orange-600 dark:text-ff-amber font-bold"
-            >
-              Player
-            </button>
-            <button
-              type="button"
-              onClick={() => fillDemo('admin')}
-              className="px-2.5 py-1 rounded bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 font-bold"
-            >
-              Admin
-            </button>
-          </div>
         </div>
 
         {error && (
