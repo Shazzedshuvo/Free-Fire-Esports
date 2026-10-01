@@ -47,11 +47,6 @@ export default function LiveChatWidget() {
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Hide completely on admin routes
-  if (pathname?.startsWith('/admin')) {
-    return null;
-  }
-
   // Determine user-specific isolated session ID
   const [sessionId, setSessionId] = useState<string>('');
   const [userInfo, setUserInfo] = useState<ChatUserInfo | null>(null);
@@ -63,6 +58,8 @@ export default function LiveChatWidget() {
 
   // 1. Establish session isolation per user
   useEffect(() => {
+    if (pathname?.startsWith('/admin')) return;
+
     let activeSessionId = '';
 
     if (user && user.id) {
@@ -134,11 +131,11 @@ export default function LiveChatWidget() {
         }
       })
       .catch(() => {});
-  }, [user]);
+  }, [user, pathname]);
 
   // 2. Poll for updates on the active session every 3.5s
   useEffect(() => {
-    if (!sessionId) return;
+    if (pathname?.startsWith('/admin') || !sessionId) return;
 
     const interval = setInterval(() => {
       fetch(`/api/chat?sessionId=${sessionId}`)
@@ -166,7 +163,7 @@ export default function LiveChatWidget() {
     }, 3500);
 
     return () => clearInterval(interval);
-  }, [sessionId, isOpen]);
+  }, [sessionId, isOpen, pathname]);
 
   // Scroll to bottom on message updates
   useEffect(() => {
@@ -279,6 +276,10 @@ export default function LiveChatWidget() {
     { label: '💳 উইথড্র করার নিয়ম কি?', query: 'উইথড্র করার নিয়ম কি?' },
     { label: '👨‍💻 সরাসরি অ্যাডমিনের সাহায্য চাই', query: 'অ্যাডমিনের সাথে সরাসরি কথা বলতে চাই' },
   ];
+
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <>
