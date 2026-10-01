@@ -1,0 +1,213 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                     String                  @id @default(uuid())
+  fullName               String
+  username               String                  @unique
+  ffPlayerName           String
+  ffUid                  String                  @unique
+  mobileNumber           String
+  email                  String                  @unique
+  passwordHash           String
+  avatarUrl              String?
+  role                   String                  @default("USER") // USER, ADMIN, SUPER_ADMIN, FINANCE_MANAGER, TOURNAMENT_MANAGER, MODERATOR
+  isSuspended            Boolean                 @default(false)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+
+  wallet                 Wallet?
+  tournamentParticipants TournamentParticipant[]
+  depositRequests        DepositRequest[]
+  supportTickets         SupportTicket[]
+  notifications          Notification[]
+}
+
+model Wallet {
+  id             String              @id @default(uuid())
+  userId         String              @unique
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance        Float               @default(0.0)
+  totalDeposited Float               @default(0.0)
+  totalWon       Float               @default(0.0)
+  totalEntryFees Float               @default(0.0)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  transactions   WalletTransaction[]
+}
+
+model WalletTransaction {
+  id            String   @id @default(uuid())
+  walletId      String
+  wallet        Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  type          String   // DEPOSIT, TOURNAMENT_ENTRY, PRIZE, REFUND, ADMIN_CREDIT, ADMIN_DEBIT
+  amount        Float
+  balanceAfter  Float
+  paymentMethod String?  // bKash, Nagad, System
+  senderNumber  String?
+  externalTxnId String?
+  status        String   @default("APPROVED") // PENDING, APPROVED, REJECTED, FAILED
+  notes         String?
+  tournamentId  String?
+  referenceId   String?
+  createdAt     DateTime @default(now())
+}
+
+model DepositRequest {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount          Float
+  method          String    @default("bKash")
+  senderNumber    String
+  transactionId   String    @unique
+  screenshotUrl   String?
+  status          String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  rejectionReason String?
+  verifiedBy      String?
+  verifiedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Tournament {
+  id                         String                  @id @default(uuid())
+  title                      String
+  bannerImage                String
+  description                String
+  gameMode                   String                  // SOLO, DUO, SQUAD
+  mapName                    String                  // Bermuda, Purgatory, Kalahari, Alpine, NexTerra
+  entryFee                   Float
+  prizePool                  Float
+  winnerPrize                Float
+  runnerUpPrize              Float
+  thirdPlacePrize            Float
+  perKillPrize               Float                   @default(0.0)
+  totalSlots                 Int
+  remainingSlots             Int
+  matchDate                  String
+  matchTime                  String
+  registrationDeadline       DateTime
+  roomId                     String?
+  roomPassword               String?
+  isRoomCredentialsPublished Boolean                 @default(false)
+  roomCredentialsReleaseTime DateTime?
+  liveStreamUrl              String?
+  rules                      String
+  status                     String                  @default("REGISTRATION_OPEN") // UPCOMING, REGISTRATION_OPEN, FULL, LIVE, COMPLETED, CANCELLED
+  winnerTeam                 String?
+  createdAt                  DateTime                @default(now())
+  updatedAt                  DateTime                @updatedAt
+
+  participants               TournamentParticipant[]
+  results                    TournamentResult[]
+}
+
+model TournamentParticipant {
+  id           String     @id @default(uuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slotNumber   Int
+  teamName     String?
+  player1Name  String
+  player1Uid   String
+  player2Name  String?
+  player2Uid   String?
+  player3Name  String?
+  player3Uid   String?
+  player4Name  String?
+  player4Uid   String?
+  player5Name  String?
+  player5Uid   String?
+  joinedAt     DateTime   @default(now())
+
+  @@unique([tournamentId, userId])
+}
+
+model TournamentResult {
+  id                 String     @id @default(uuid())
+  tournamentId       String
+  tournament         Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  rank               Int
+  playerNameOrTeam   String
+  kills              Int        @default(0)
+  placementPoints    Int        @default(0)
+  totalPoints        Int        @default(0)
+  prizeEarned        Float      @default(0.0)
+  isPrizeDistributed Boolean    @default(false)
+  userId             String?
+  createdAt          DateTime   @default(now())
+}
+
+model Notice {
+  id          String    @id @default(uuid())
+  title       String
+  description String
+  type        String    @default("IMPORTANT") // IMPORTANT, TOURNAMENT, UPDATE, MAINTENANCE, WINNER_ANNOUNCEMENT
+  imageUrl    String?
+  isPinned    Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  publishDate DateTime  @default(now())
+  expireDate  DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model HeroSlide {
+  id           String   @id @default(uuid())
+  title        String
+  subtitle     String
+  buttonText   String
+  buttonLink   String
+  bgImage      String
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SupportTicket {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject    String
+  message    String
+  category   String   // DEPOSIT, TOURNAMENT, ACCOUNT, OTHER
+  status     String   @default("OPEN") // OPEN, ANSWERED, CLOSED
+  adminReply String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model SystemSetting {
+  key   String @id
+  value String
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  adminId   String?
+  adminName String?
+  action    String
+  target    String
+  details   String
+  createdAt DateTime @default(now())
+}

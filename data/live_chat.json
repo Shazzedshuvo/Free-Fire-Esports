@@ -1,0 +1,83 @@
+[
+  {
+    "id": "msg_sample_1",
+    "sessionId": "session_demo_player",
+    "sender": "user",
+    "senderName": "Tanvir Hossain",
+    "senderRole": "USER",
+    "text": "ভাইয়া, আমি বিকাশ থেকে ৫০০ টাকা সেন্ড মানি করেছি, ট্রানজেকশন আইডি দিলাম। একটু ভেরিফাই করে দিন প্লিজ।",
+    "time": "10:02 AM",
+    "timestamp": 1790827443606,
+    "username": "tanvir_ff",
+    "fullName": "Tanvir Hossain",
+    "ffUid": "1984729103",
+    "email": "tanvir@gmail.com"
+  },
+  {
+    "id": "msg_sample_2",
+    "sessionId": "session_demo_player",
+    "sender": "admin",
+    "senderName": "Admin Chief",
+    "senderRole": "SUPER_ADMIN",
+    "text": "ধন্যবাদ তানভীর ভাই। আপনার TrxID চেক করা হচ্ছে, ২ মিনিটের মধ্যে ওয়ালেটে টাকা যুক্ত হয়ে যাবে।",
+    "time": "10:05 AM",
+    "timestamp": 1790827743606,
+    "username": "admin",
+    "fullName": "Super Administrator"
+  },
+  {
+    "id": "msg_sample_3",
+    "sessionId": "session_demo_player_2",
+    "sender": "user",
+    "senderName": "Shuvo Gamer",
+    "senderRole": "USER",
+    "text": "আজকের স্কোয়াড টুর্নামেন্টের রুম আইডি কয়টায় দেওয়া হবে?",
+    "time": "10:08 AM",
+    "timestamp": 1790828043606,
+    "username": "shuvo_pro",
+    "fullName": "Shuvo Rahman",
+    "ffUid": "2837491029",
+    "email": "shuvo@gmail.com"
+  },
+  {
+    "id": "msg_1790828427103_d6t6e",
+    "sessionId": "session_1790828396073_17rtwr",
+    "sender": "user",
+    "senderName": "Guest Player",
+    "senderRole": "USER",
+    "text": "রুম আইডি ও পাসওয়ার্ড কখন পাবো?",
+    "time": "10:20 AM",
+    "timestamp": 1790828427112
+  },
+  {
+    "id": "msg_1790828473936_toecy",
+    "sessionId": "session_1790828396073_17rtwr",
+    "sender": "user",
+    "senderName": "Super Administrator",
+    "senderRole": "USER",
+    "text": "রুম আইডি ও পাসওয়ার্ড কখন পাবো?",
+    "time": "10:21 AM",
+    "timestamp": 1790828473936,
+    "userId": "b233094d-c9e1-4fc2-8604-ed59691696ec",
+    "username": "superadmin",
+    "fullName": "Super Administrator",
+    "ffUid": "100000001",
+    "email": "admin@freefire.com"
+  },
+  {
+    "id": "msg_1790834994891_w34fq",
+    "sessionId": "session_1790828342444_mhv0xm",
+    "sender": "user",
+    "senderName": "Super Administrator",
+    "senderRole": "USER",
+    "text": "রুম আইডি ও পাসওয়ার্ড কখন পাবো?",
+    "time": "12:09 PM",
+    "timestamp": 1790834994977,
+    "userId": "b233094d-c9e1-4fc2-8604-ed59691696ec",
+    "username": "superadmin",
+    "fullName": "Super Administrator",
+    "ffUid": "100000001",
+    "phoneNumber": "01711000001",
+    "email": "admin@freefire.com"
+  }
+]
