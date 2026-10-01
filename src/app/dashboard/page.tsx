@@ -85,17 +85,19 @@ export default function UserDashboardPage() {
     }
   }, [user, isLoading, router]);
 
-  // Set chat session ID
+  // Set chat session ID (tied directly to user identity)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (user?.id) {
+      setSessionId(`user_${user.id}`);
+    } else if (typeof window !== 'undefined') {
       let sid = localStorage.getItem('ff_livechat_session');
       if (!sid) {
-        sid = 'session_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+        sid = 'guest_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
         localStorage.setItem('ff_livechat_session', sid);
       }
       setSessionId(sid);
     }
-  }, []);
+  }, [user]);
 
   // Fetch User's Registered Matches
   const fetchMyMatches = async () => {
@@ -217,6 +219,11 @@ export default function UserDashboardPage() {
       const data = await res.json();
       if (res.ok && data.message) {
         setChatMessages((prev) => [...prev, data.message]);
+        if (data.autoReply) {
+          setTimeout(() => {
+            setChatMessages((prev) => [...prev, data.autoReply]);
+          }, 400);
+        }
         setChatInput('');
       }
     } catch (e) {

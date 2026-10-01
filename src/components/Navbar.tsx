@@ -104,12 +104,12 @@ export default function Navbar() {
               {theme === 'light' ? (
                 <>
                   <Sun className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
-                  <span className="font-bold">Day</span>
+                  <span className="font-bold hidden sm:inline">Day</span>
                 </>
               ) : (
                 <>
                   <Moon className="w-4 h-4 text-sky-400 fill-sky-400 shrink-0" />
-                  <span className="font-bold">Night</span>
+                  <span className="font-bold hidden sm:inline">Night</span>
                 </>
               )}
             </button>

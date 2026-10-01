@@ -77,10 +77,17 @@ export default function WalletPage() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/deposit"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-ff-orange via-amber-500 to-ff-amber hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black uppercase text-xs sm:text-sm tracking-wider shadow-glow-orange transition-all"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-ff-orange via-amber-500 to-ff-amber hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black uppercase text-xs sm:text-sm tracking-wider shadow-glow-orange transition-all"
             >
               <PlusCircle className="w-4 h-4" />
               <span>{t('deposit_money')}</span>
+            </Link>
+            <Link
+              href="/dashboard?tab=withdrawals"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black uppercase text-xs sm:text-sm tracking-wider transition-all shadow-md"
+            >
+              <Wallet className="w-4 h-4" />
+              <span>উইথড্র / Withdraw</span>
             </Link>
             <Link
               href="/matches"
