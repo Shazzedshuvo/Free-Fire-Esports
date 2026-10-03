@@ -1,6 +1,5 @@
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "mongodb"
 }
 
 generator client {
@@ -8,19 +7,19 @@ generator client {
 }
 
 model User {
-  id                     String                  @id @default(uuid())
-  fullName               String
-  username               String                  @unique
-  ffPlayerName           String
-  ffUid                  String                  @unique
-  mobileNumber           String
-  email                  String                  @unique
-  passwordHash           String
-  avatarUrl              String?
-  role                   String                  @default("USER") // USER, ADMIN, SUPER_ADMIN, FINANCE_MANAGER, TOURNAMENT_MANAGER, MODERATOR
-  isSuspended            Boolean                 @default(false)
-  createdAt              DateTime                @default(now())
-  updatedAt              DateTime                @updatedAt
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  fullName     String
+  username     String   @unique
+  ffPlayerName String
+  ffUid        String   @unique
+  mobileNumber String
+  email        String   @unique
+  passwordHash String
+  avatarUrl    String?
+  role         String   @default("USER") // USER, ADMIN, SUPER_ADMIN, FINANCE_MANAGER, TOURNAMENT_MANAGER, MODERATOR
+  isSuspended  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   wallet                 Wallet?
   tournamentParticipants TournamentParticipant[]
@@ -30,27 +29,27 @@ model User {
 }
 
 model Wallet {
-  id             String              @id @default(uuid())
-  userId         String              @unique
-  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  balance        Float               @default(0.0)
-  totalDeposited Float               @default(0.0)
-  totalWon       Float               @default(0.0)
-  totalEntryFees Float               @default(0.0)
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String   @unique @db.ObjectId
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance        Float    @default(0.0)
+  totalDeposited Float    @default(0.0)
+  totalWon       Float    @default(0.0)
+  totalEntryFees Float    @default(0.0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  transactions   WalletTransaction[]
+  transactions WalletTransaction[]
 }
 
 model WalletTransaction {
-  id            String   @id @default(uuid())
-  walletId      String
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  walletId      String   @db.ObjectId
   wallet        Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
-  type          String   // DEPOSIT, TOURNAMENT_ENTRY, PRIZE, REFUND, ADMIN_CREDIT, ADMIN_DEBIT
+  type          String // DEPOSIT, TOURNAMENT_ENTRY, PRIZE, REFUND, ADMIN_CREDIT, ADMIN_DEBIT
   amount        Float
   balanceAfter  Float
-  paymentMethod String?  // bKash, Nagad, System
+  paymentMethod String? // bKash, Nagad, System
   senderNumber  String?
   externalTxnId String?
   status        String   @default("APPROVED") // PENDING, APPROVED, REJECTED, FAILED
@@ -61,8 +60,8 @@ model WalletTransaction {
 }
 
 model DepositRequest {
-  id              String    @id @default(uuid())
-  userId          String
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String    @db.ObjectId
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   amount          Float
   method          String    @default("bKash")
@@ -78,18 +77,18 @@ model DepositRequest {
 }
 
 model Tournament {
-  id                         String                  @id @default(uuid())
+  id                         String    @id @default(auto()) @map("_id") @db.ObjectId
   title                      String
   bannerImage                String
   description                String
-  gameMode                   String                  // SOLO, DUO, SQUAD
-  mapName                    String                  // Bermuda, Purgatory, Kalahari, Alpine, NexTerra
+  gameMode                   String // SOLO, DUO, SQUAD
+  mapName                    String // Bermuda, Purgatory, Kalahari, Alpine, NexTerra
   entryFee                   Float
   prizePool                  Float
   winnerPrize                Float
   runnerUpPrize              Float
   thirdPlacePrize            Float
-  perKillPrize               Float                   @default(0.0)
+  perKillPrize               Float     @default(0.0)
   totalSlots                 Int
   remainingSlots             Int
   matchDate                  String
@@ -97,24 +96,24 @@ model Tournament {
   registrationDeadline       DateTime
   roomId                     String?
   roomPassword               String?
-  isRoomCredentialsPublished Boolean                 @default(false)
+  isRoomCredentialsPublished Boolean   @default(false)
   roomCredentialsReleaseTime DateTime?
   liveStreamUrl              String?
   rules                      String
-  status                     String                  @default("REGISTRATION_OPEN") // UPCOMING, REGISTRATION_OPEN, FULL, LIVE, COMPLETED, CANCELLED
+  status                     String    @default("REGISTRATION_OPEN") // UPCOMING, REGISTRATION_OPEN, FULL, LIVE, COMPLETED, CANCELLED
   winnerTeam                 String?
-  createdAt                  DateTime                @default(now())
-  updatedAt                  DateTime                @updatedAt
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
 
-  participants               TournamentParticipant[]
-  results                    TournamentResult[]
+  participants TournamentParticipant[]
+  results      TournamentResult[]
 }
 
 model TournamentParticipant {
-  id           String     @id @default(uuid())
-  tournamentId String
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  tournamentId String     @db.ObjectId
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  userId       String
+  userId       String     @db.ObjectId
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   slotNumber   Int
   teamName     String?
@@ -134,8 +133,8 @@ model TournamentParticipant {
 }
 
 model TournamentResult {
-  id                 String     @id @default(uuid())
-  tournamentId       String
+  id                 String     @id @default(auto()) @map("_id") @db.ObjectId
+  tournamentId       String     @db.ObjectId
   tournament         Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   rank               Int
   playerNameOrTeam   String
@@ -149,7 +148,7 @@ model TournamentResult {
 }
 
 model Notice {
-  id          String    @id @default(uuid())
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   description String
   type        String    @default("IMPORTANT") // IMPORTANT, TOURNAMENT, UPDATE, MAINTENANCE, WINNER_ANNOUNCEMENT
@@ -162,7 +161,7 @@ model Notice {
 }
 
 model HeroSlide {
-  id           String   @id @default(uuid())
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
   title        String
   subtitle     String
   buttonText   String
@@ -174,8 +173,8 @@ model HeroSlide {
 }
 
 model Notification {
-  id        String   @id @default(uuid())
-  userId    String
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   message   String
@@ -185,12 +184,12 @@ model Notification {
 }
 
 model SupportTicket {
-  id         String   @id @default(uuid())
-  userId     String
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   subject    String
   message    String
-  category   String   // DEPOSIT, TOURNAMENT, ACCOUNT, OTHER
+  category   String // DEPOSIT, TOURNAMENT, ACCOUNT, OTHER
   status     String   @default("OPEN") // OPEN, ANSWERED, CLOSED
   adminReply String?
   createdAt  DateTime @default(now())
@@ -198,12 +197,13 @@ model SupportTicket {
 }
 
 model SystemSetting {
-  key   String @id
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  key   String @unique
   value String
 }
 
 model AuditLog {
-  id        String   @id @default(uuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   adminId   String?
   adminName String?
   action    String
